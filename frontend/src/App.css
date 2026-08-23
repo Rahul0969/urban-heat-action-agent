@@ -1,0 +1,39 @@
+.app {
+  min-height: 100vh;
+  background: #0f172a;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  padding: 24px 40px;
+  border-bottom: 1px solid #334155;
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.header p {
+  color: #94a3b8;
+}
+
+main {
+  padding: 30px;
+}
+
+.dashboard-card {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.map-placeholder {
+  height: 500px;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #334155;
+  border-radius: 10px;
+}
