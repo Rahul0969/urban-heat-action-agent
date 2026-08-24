@@ -1,3 +1,4 @@
+import HeatMap from "./components/HeatMap";
 import "./App.css";
 
 function App() {
@@ -10,10 +11,9 @@ function App() {
 
       <main>
         <section className="dashboard-card">
-          <h2>Temperature Heatmap</h2>
-          <div className="map-placeholder">
-            <p>Map coming next...</p>
-          </div>
+          <h2>FortyGuard Temperature Map</h2>
+
+          <HeatMap />
         </section>
       </main>
     </div>
