@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 
+from app.heat_risk import calculate_heat_risk
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -186,11 +187,95 @@ def get_environmental():
 
     result = response["result"]
 
+    locations = result.get("locations", [])
+
+    if not locations:
+        return {
+            "error": "Environmental location data unavailable"
+        }
+
+    location_data = locations[0]
+    parameters = location_data.get("parameters", {})
+
+    heat_index_values = parameters.get(
+        "heat_index_celsius",
+        []
+    )
+
+    apparent_temperature_values = parameters.get(
+        "apparent_temperature_celsius",
+        []
+    )
+
+    wet_bulb_values = parameters.get(
+        "wet_bulb_temperature_celsius",
+        []
+    )
+
+    relative_humidity_values = parameters.get(
+        "relative_humidity_percent",
+        []
+    )
+
+    air_quality_values = []
+
+    for key, values in parameters.items():
+        normalized_key = key.lower().replace("_", "").replace(" ", "")
+
+        if "airquality" in normalized_key and "idx" in normalized_key:
+            if isinstance(values, list):
+                air_quality_values = values
+                break
+
+    heat_index = (
+        sum(heat_index_values) / len(heat_index_values)
+        if heat_index_values
+        else None
+    )
+
+    apparent_temperature = (
+        sum(apparent_temperature_values) / len(apparent_temperature_values)
+        if apparent_temperature_values
+        else None
+    )
+
+    wet_bulb = (
+        sum(wet_bulb_values) / len(wet_bulb_values)
+        if wet_bulb_values
+        else None
+    )
+
+    relative_humidity = (
+        sum(relative_humidity_values) / len(relative_humidity_values)
+        if relative_humidity_values
+        else None
+    )
+
+    air_quality = (
+        sum(air_quality_values) / len(air_quality_values)
+        if air_quality_values
+        else None
+    )
+
+    heat_risk = calculate_heat_risk(
+        temperature=temperature,
+        heat_index=heat_index,
+        wet_bulb=wet_bulb,
+        vegetation=None,
+        impervious=None
+    )
+
     return {
         "location": {
             "latitude": latitude,
             "longitude": longitude
         },
-        "temperature": temperature,
+        "temperature": round(temperature, 2),
+        "heat_index": round(heat_index, 2) if heat_index is not None else None,
+        "apparent_temperature": round(apparent_temperature, 2) if apparent_temperature is not None else None,
+        "wet_bulb": round(wet_bulb, 2) if wet_bulb is not None else None,
+        "relative_humidity": round(relative_humidity, 2) if relative_humidity is not None else None,
+        "air_quality": round(air_quality, 2) if air_quality is not None else None,
+        "heat_risk": heat_risk,
         "environmental": result
     }
