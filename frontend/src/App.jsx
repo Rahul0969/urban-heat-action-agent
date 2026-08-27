@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const clamp = (value, min, max) =>
+  Math.min(max, Math.max(min, value));
 
 const normalize = (value, min, max) => {
   if (
@@ -28,16 +29,35 @@ const polarToCartesian = (cx, cy, r, angleDeg) => {
   };
 };
 
-const describeArc = (cx, cy, r, startAngle, endAngle) => {
+const describeArc = (
+  cx,
+  cy,
+  r,
+  startAngle,
+  endAngle
+) => {
   if (Math.abs(endAngle - startAngle) < 0.01) {
     return "";
   }
 
-  const start = polarToCartesian(cx, cy, r, startAngle);
-  const end = polarToCartesian(cx, cy, r, endAngle);
+  const start = polarToCartesian(
+    cx,
+    cy,
+    r,
+    startAngle
+  );
+
+  const end = polarToCartesian(
+    cx,
+    cy,
+    r,
+    endAngle
+  );
 
   const largeArcFlag =
-    Math.abs(endAngle - startAngle) > 180 ? 1 : 0;
+    Math.abs(endAngle - startAngle) > 180
+      ? 1
+      : 0;
 
   return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`;
 };
@@ -45,7 +65,10 @@ const describeArc = (cx, cy, r, startAngle, endAngle) => {
 const levelAccent = (level) => {
   const key = (level || "").toLowerCase();
 
-  if (key.includes("extreme") || key.includes("severe")) {
+  if (
+    key.includes("extreme") ||
+    key.includes("severe")
+  ) {
     return "solar";
   }
 
@@ -66,13 +89,20 @@ const levelAccent = (level) => {
 
 const latest = (value) => {
   if (Array.isArray(value)) {
-    return value.length > 0 ? value[value.length - 1] : null;
+    return value.length > 0
+      ? value[value.length - 1]
+      : null;
   }
 
   return value;
 };
 
-function ThermalGauge({ fraction, accent, value, label }) {
+function ThermalGauge({
+  fraction,
+  accent,
+  value,
+  label,
+}) {
   const cx = 100;
   const cy = 92;
   const r = 74;
@@ -98,10 +128,22 @@ function ThermalGauge({ fraction, accent, value, label }) {
             x2="1"
             y2="0"
           >
-            <stop offset="0%" stopColor="var(--purple)" />
-            <stop offset="35%" stopColor="var(--ember)" />
-            <stop offset="70%" stopColor="var(--flare)" />
-            <stop offset="100%" stopColor="var(--solar)" />
+            <stop
+              offset="0%"
+              stopColor="var(--purple)"
+            />
+            <stop
+              offset="35%"
+              stopColor="var(--ember)"
+            />
+            <stop
+              offset="70%"
+              stopColor="var(--flare)"
+            />
+            <stop
+              offset="100%"
+              stopColor="var(--solar)"
+            />
           </linearGradient>
         </defs>
 
@@ -190,22 +232,41 @@ function MetricCard({
 function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] =
+    useState(null);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/environmental")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Backend request failed");
-        }
+    const fetchEnvironmentalData = () => {
+      fetch(
+        "http://127.0.0.1:8000/api/environmental"
+      )
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(
+              "Backend request failed"
+            );
+          }
 
-        return response.json();
-      })
-      .then((result) => {
-        setData(result);
-      })
-      .catch((err) => {
-        setError(err.message);
-      });
+          return response.json();
+        })
+        .then((result) => {
+          setData(result);
+          setError(null);
+          setLastUpdated(new Date());
+        })
+        .catch((err) => {
+          setError(err.message);
+        });
+    };
+
+    fetchEnvironmentalData();
+
+    const interval = setInterval(
+      fetchEnvironmentalData,
+      60000
+    );
+
+    return () => clearInterval(interval);
   }, []);
 
   if (error) {
@@ -216,7 +277,9 @@ function App() {
             SIGNAL LOST
           </span>
 
-          <h1>Sensor feed unavailable</h1>
+          <h1>
+            Sensor feed unavailable
+          </h1>
 
           <p>{error}</p>
         </div>
@@ -232,10 +295,13 @@ function App() {
             ● ACQUIRING SIGNAL
           </span>
 
-          <h1>Urban Heat Action Agent</h1>
+          <h1>
+            Urban Heat Action Agent
+          </h1>
 
           <p>
-            Reading hotspot telemetry from FortyGuard…
+            Reading hotspot telemetry from
+            FortyGuard…
           </p>
         </div>
       </div>
@@ -274,16 +340,19 @@ function App() {
     data.wet_bulb ?? latest(wetBulb);
 
   const humidityValue =
-    data.relative_humidity ?? latest(humidity);
+    data.relative_humidity ??
+    latest(humidity);
 
   const aqiValue =
-    data.air_quality ?? latest(airQuality);
+    data.air_quality ??
+    latest(airQuality);
 
   const heatRisk =
     data.heat_risk || {};
 
   const recommendations =
-    data.recommendations?.recommendations || [];
+    data.recommendations?.recommendations ||
+    [];
 
   const accent =
     levelAccent(heatRisk.level);
@@ -303,13 +372,25 @@ function App() {
   const solarMax = 1000;
 
   const ghiPct =
-    normalize(solar.ghi, 0, solarMax) ?? 0;
+    normalize(
+      solar.ghi,
+      0,
+      solarMax
+    ) ?? 0;
 
   const dniPct =
-    normalize(solar.dni, 0, solarMax) ?? 0;
+    normalize(
+      solar.dni,
+      0,
+      solarMax
+    ) ?? 0;
 
   const dhiPct =
-    normalize(solar.dhi, 0, solarMax) ?? 0;
+    normalize(
+      solar.dhi,
+      0,
+      solarMax
+    ) ?? 0;
 
   return (
     <div className="app">
@@ -339,7 +420,8 @@ function App() {
               : "—"
           }
           label={
-            heatRisk.level ?? "unknown"
+            heatRisk.level ||
+            "unknown"
           }
         />
 
@@ -347,12 +429,15 @@ function App() {
           <span
             className={`risk-chip risk-chip--${accent}`}
           >
-            {heatRisk.level ?? "UNKNOWN"}
+            {heatRisk.level ||
+              "UNKNOWN"}
           </span>
 
           <div className="hero-temp">
             {data.temperature != null
-              ? Number(data.temperature).toFixed(1)
+              ? Number(
+                  data.temperature
+                ).toFixed(1)
               : "—"}
 
             <span className="hero-temp-unit">
@@ -361,7 +446,8 @@ function App() {
           </div>
 
           <p className="hero-caption">
-            Priority heat hotspot temperature
+            Priority heat hotspot
+            temperature
           </p>
         </div>
       </section>
@@ -371,7 +457,9 @@ function App() {
           label="Heat Index"
           value={
             heatIndexValue != null
-              ? Number(heatIndexValue).toFixed(1)
+              ? Number(
+                  heatIndexValue
+                ).toFixed(1)
               : null
           }
           unit="°C"
@@ -387,7 +475,9 @@ function App() {
           label="Wet Bulb"
           value={
             wetBulbValue != null
-              ? Number(wetBulbValue).toFixed(1)
+              ? Number(
+                  wetBulbValue
+                ).toFixed(1)
               : null
           }
           unit="°C"
@@ -403,7 +493,9 @@ function App() {
           label="Humidity"
           value={
             humidityValue != null
-              ? Number(humidityValue).toFixed(1)
+              ? Number(
+                  humidityValue
+                ).toFixed(1)
               : null
           }
           unit="%"
@@ -419,7 +511,9 @@ function App() {
           label="Air Quality"
           value={
             aqiValue != null
-              ? Number(aqiValue).toFixed(1)
+              ? Number(
+                  aqiValue
+                ).toFixed(1)
               : null
           }
           unit=""
@@ -443,10 +537,9 @@ function App() {
               (recommendation, index) => (
                 <li key={index}>
                   <span className="rec-index">
-                    {String(index + 1).padStart(
-                      2,
-                      "0"
-                    )}
+                    {String(
+                      index + 1
+                    ).padStart(2, "0")}
                   </span>
 
                   <span>
@@ -458,7 +551,8 @@ function App() {
           </ol>
         ) : (
           <p className="empty">
-            No recommendations available.
+            No recommendations
+            available.
           </p>
         )}
       </section>
@@ -531,7 +625,8 @@ function App() {
               <span>LAT</span>
 
               <strong>
-                {data.location?.latitude != null
+                {data.location?.latitude !=
+                null
                   ? Number(
                       data.location.latitude
                     ).toFixed(5)
@@ -543,7 +638,8 @@ function App() {
               <span>LON</span>
 
               <strong>
-                {data.location?.longitude != null
+                {data.location?.longitude !=
+                null
                   ? Number(
                       data.location.longitude
                     ).toFixed(5)
@@ -551,6 +647,22 @@ function App() {
               </strong>
             </div>
           </div>
+
+          {lastUpdated && (
+            <p
+              style={{
+                marginTop: "18px",
+                color:
+                  "var(--paper-dim)",
+                fontFamily:
+                  '"IBM Plex Mono", monospace',
+                fontSize: "11px",
+              }}
+            >
+              UPDATED{" "}
+              {lastUpdated.toLocaleTimeString()}
+            </p>
+          )}
         </div>
       </section>
     </div>
