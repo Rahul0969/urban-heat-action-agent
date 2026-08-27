@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 
 from app.heat_risk import calculate_heat_risk
+from app.recommendations import generate_recommendations
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -265,17 +266,30 @@ def get_environmental():
         impervious=None
     )
 
+    recommendations = generate_recommendations(
+        heat_risk=heat_risk,
+        temperature=temperature,
+        heat_index=heat_index,
+        wet_bulb=wet_bulb
+    )
+
     return {
         "location": {
             "latitude": latitude,
             "longitude": longitude
         },
         "temperature": round(temperature, 2),
-        "heat_index": round(heat_index, 2) if heat_index is not None else None,
-        "apparent_temperature": round(apparent_temperature, 2) if apparent_temperature is not None else None,
-        "wet_bulb": round(wet_bulb, 2) if wet_bulb is not None else None,
-        "relative_humidity": round(relative_humidity, 2) if relative_humidity is not None else None,
-        "air_quality": round(air_quality, 2) if air_quality is not None else None,
+        "heat_index": round(heat_index, 2)
+        if heat_index is not None else None,
+        "apparent_temperature": round(apparent_temperature, 2)
+        if apparent_temperature is not None else None,
+        "wet_bulb": round(wet_bulb, 2)
+        if wet_bulb is not None else None,
+        "relative_humidity": round(relative_humidity, 2)
+        if relative_humidity is not None else None,
+        "air_quality": round(air_quality, 2)
+        if air_quality is not None else None,
         "heat_risk": heat_risk,
+        "recommendations": recommendations,
         "environmental": result
     }
