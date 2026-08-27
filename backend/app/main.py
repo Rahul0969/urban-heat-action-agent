@@ -63,6 +63,7 @@ def analyze_heatmap(result):
 
     sorted_temperatures = sorted(temperatures)
     index = int(len(sorted_temperatures) * 0.90)
+
     threshold = sorted_temperatures[
         min(index, len(sorted_temperatures) - 1)
     ]
@@ -128,4 +129,68 @@ def get_heatmap():
         "activity_id": response["activity_id"],
         "heatmap": result,
         "analysis": analysis
+    }
+
+
+@app.get("/api/environmental")
+def get_environmental():
+    response = client.create_heatmap(
+        polygon_aoi=MANHATTAN_POLYGON,
+        start_date="2024-07-15",
+        start_time="14:00",
+        filter_type=1,
+        granularity=100
+    )
+
+    heatmap_result = response["result"]
+    analysis = analyze_heatmap(heatmap_result)
+
+    if not analysis["hotspots"]:
+        return {
+            "error": "No hotspots found"
+        }
+
+    hotspot = analysis["hotspots"][0]
+
+    geometry = hotspot.get("geometry", {})
+    coordinates = geometry.get("coordinates", [])
+
+    if not coordinates:
+        return {
+            "error": "Hotspot coordinates unavailable"
+        }
+
+    polygon = coordinates[0]
+
+    longitude = sum(point[0] for point in polygon) / len(polygon)
+    latitude = sum(point[1] for point in polygon) / len(polygon)
+
+    temperature = hotspot["temperature"]
+
+    response = client.environmental_parameters(
+        latitude=latitude,
+        longitude=longitude,
+        temperature=temperature,
+        start_date="2024-07-15",
+        start_time="12:00",
+        end_time="18:00",
+        filter_type=2,
+        analysis=[
+            "heat_index_celsius",
+            "apparent_temperature_celsius",
+            "wet_bulb_temperature_celsius",
+            "relative_humidity_percent",
+            "air_quality:idx"
+        ]
+    )
+
+    result = response["result"]
+
+    return {
+        "location": {
+            "latitude": latitude,
+            "longitude": longitude
+        },
+        "temperature": temperature,
+        "environmental": result
     }
