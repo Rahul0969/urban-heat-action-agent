@@ -238,7 +238,7 @@ function App() {
   useEffect(() => {
     const fetchEnvironmentalData = () => {
       fetch(
-        "http://127.0.0.1:8000/api/environmental"
+        `${import.meta.env.VITE_API_URL}/api/environmental`
       )
         .then((response) => {
           if (!response.ok) {
